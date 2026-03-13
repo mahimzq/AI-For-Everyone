@@ -93,12 +93,13 @@ CREATE TABLE IF NOT EXISTS resources (
 );
 
 -- Download tracking
-CREATE TABLE IF NOT EXISTS download_logs (
+CREATE TABLE IF NOT EXISTS resource_downloads (
     id INT AUTO_INCREMENT PRIMARY KEY,
     resource_id INT NOT NULL,
-    ip_address VARCHAR(45),
-    user_agent TEXT,
-    downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    downloader_email VARCHAR(255) NOT NULL,
+    downloader_name VARCHAR(255) DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (resource_id) REFERENCES resources (id)
 );
 

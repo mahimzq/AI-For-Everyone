@@ -15,6 +15,4 @@ const Resource = sequelize.define('Resource', {
     tableName: 'resources'
 })
 
-Resource.hasMany(sequelize.models.ResourceDownload, { foreignKey: 'resource_id', as: 'downloads' })
-
 module.exports = Resource

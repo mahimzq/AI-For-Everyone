@@ -1,2 +1,10 @@
+node_modules
+.env
+dist
+client/dist
+.DS_Store
+logs/*.log
+*.tgz
 *.zip
-*.zip
+server/uploads/*
+!server/uploads/.gitkeep

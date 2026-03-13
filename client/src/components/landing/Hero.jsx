@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, Calendar, ArrowRight, ChevronDown } from 'lucide-react'
+import { MapPin, Calendar, ArrowRight, ChevronDown, MessageCircle } from 'lucide-react'
 import ParticleBackground from '../shared/ParticleBackground'
 import CountdownTimer from '../shared/CountdownTimer'
+import axios from 'axios'
 
 const heroImages = [
     '/images/hero-slide-1.png',
@@ -12,12 +13,25 @@ const heroImages = [
 
 export default function Hero() {
     const [currentSlide, setCurrentSlide] = useState(0)
+    const [whatsappCount, setWhatsappCount] = useState('0')
 
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentSlide(prev => (prev + 1) % heroImages.length)
         }, 5000)
         return () => clearInterval(interval)
+    }, [])
+
+    useEffect(() => {
+        const fetchWhatsappCount = async () => {
+            try {
+                const res = await axios.get('/api/settings/whatsapp-count')
+                setWhatsappCount(res.data.count)
+            } catch (err) {
+                console.error('Failed to fetch whatsapp count:', err)
+            }
+        }
+        fetchWhatsappCount()
     }, [])
 
     const scrollTo = (id) => {
@@ -73,14 +87,28 @@ export default function Hero() {
                 </motion.div>
 
                 {/* Label */}
-                <motion.p
-                    className="accent-text text-neon-purple purple-glow mb-4 tracking-[0.25em]"
+                <motion.div
+                    className="flex flex-col items-center gap-3 mb-4"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.5 }}
                 >
-                    Yaoundé AI Career Acceleration Conference
-                </motion.p>
+                    <p className="accent-text text-neon-purple purple-glow tracking-[0.25em]">
+                        Yaoundé AI Career Acceleration Conference
+                    </p>
+                    
+                    {/* Live WhatsApp Count Badge */}
+                    <motion.a
+                        href="https://whatsapp.com/channel/0029Vb7TnfaLdQejJGEbbI3H"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] text-[10px] font-bold uppercase tracking-widest hover:bg-[#25D366]/20 transition-all group"
+                        whileHover={{ scale: 1.05 }}
+                    >
+                        <MessageCircle size={14} className="group-hover:animate-bounce" />
+                        Live Community Reach: <span className="text-white ml-1">{Number(whatsappCount).toLocaleString()} Members</span>
+                    </motion.a>
+                </motion.div>
 
                 {/* Main Title */}
                 <motion.h1

@@ -13,6 +13,7 @@ export default function OverviewPage() {
         totalMessages: 0,
         unreadMessages: 0,
         totalDownloads: 0,
+        whatsappCount: '0',
         daysUntilEvent: Math.ceil((new Date('2026-03-21') - new Date()) / (1000 * 60 * 60 * 24)),
     })
     const [trendData, setTrendData] = useState([])
@@ -81,6 +82,7 @@ export default function OverviewPage() {
         { label: 'Total Registrations', value: stats.totalRegistrations, icon: <Users size={24} />, color: 'text-primary-green', bgColor: 'bg-primary-green/10' },
         { label: 'Contact Messages', value: stats.totalMessages, icon: <MessageSquare size={24} />, color: 'text-blue-400', bgColor: 'bg-blue-400/10', badge: stats.unreadMessages > 0 ? `${stats.unreadMessages} unread` : null },
         { label: 'Resource Downloads', value: stats.totalDownloads, icon: <Download size={24} />, color: 'text-gold-accent', bgColor: 'bg-gold-accent/10' },
+        { label: 'WhatsApp Members', value: Number(stats.whatsappCount).toLocaleString(), icon: <MessageSquare size={24} />, color: 'text-[#25D366]', bgColor: 'bg-[#25D366]/10' },
         { label: 'Days Until Event', value: stats.daysUntilEvent, icon: <Clock size={24} />, color: 'text-purple-400', bgColor: 'bg-purple-400/10' },
     ]
 
@@ -186,7 +188,7 @@ export default function OverviewPage() {
             </div>
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {statCards.map((card, i) => (
                     <div key={i} className="bg-white/5 rounded-2xl p-5 border border-white/5 hover:border-white/10 transition-colors">
                         <div className="flex items-center justify-between mb-3">

@@ -228,7 +228,7 @@ const startServer = async () => {
             // Sync models
             require('./models/WebAuthnCredential')
             require('./models/ChatSession')
-            require('./models/ResourceDownload')
+            require('./models/resourceAssociations')
             require('./models/SiteSetting')
             await sequelize.sync()
             console.log('✅ Database models synced')

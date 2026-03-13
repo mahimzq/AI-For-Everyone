@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Send, CheckCircle2, AlertCircle, Loader2, ChevronDown, Search, MessageCircle, ChevronRight } from 'lucide-react'
+import { Send, CheckCircle2, AlertCircle, Loader2, ChevronDown, Search, MessageCircle, ChevronRight, Download } from 'lucide-react'
 import axios from 'axios'
 
 const countryCodes = [
@@ -165,6 +165,7 @@ export default function RegistrationForm() {
             if (res.status === 201 || res.status === 202) {
                 // Also store individual registration in a separate key for easy access by other components
                 localStorage.setItem('last_registration_email', data.email)
+                window.dispatchEvent(new Event('user-registered'))
                 setStatus('success')
                 reset()
             }
@@ -186,6 +187,8 @@ export default function RegistrationForm() {
                         registered_at: new Date().toISOString(),
                     })
                     localStorage.setItem('registrations', JSON.stringify(existing))
+                    localStorage.setItem('last_registration_email', data.email)
+                    window.dispatchEvent(new Event('user-registered'))
                     setStatus('success')
                     reset()
                 } catch {

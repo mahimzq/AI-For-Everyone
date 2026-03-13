@@ -10,6 +10,4 @@ const ResourceDownload = sequelize.define('ResourceDownload', {
     tableName: 'resource_downloads',
 })
 
-ResourceDownload.belongsTo(sequelize.models.Resource, { foreignKey: 'resource_id', as: 'resource' })
-
 module.exports = ResourceDownload

@@ -22,7 +22,7 @@ export default function ResourceManager() {
 
     const fetchResources = async () => {
         try {
-            const res = await axios.get('/api/resources', { headers })
+            const res = await axios.get('/api/resources/admin', { headers })
             setResources(res.data)
         } catch (err) {
             setError('Failed to load resources')
@@ -56,7 +56,8 @@ export default function ResourceManager() {
             await axios.post('/api/resources/upload', formData, {
                 headers: { ...headers, 'Content-Type': 'multipart/form-data' }
             })
-            fetchResources()
+            if (fileRef.current) fileRef.current.value = ''
+            await fetchResources()
         } catch (err) {
             setError(err.response?.data?.message || 'Upload failed')
         } finally {
@@ -232,7 +233,7 @@ export default function ResourceManager() {
                                                     </div>
                                                 </div>
                                                 <span className="text-gray-600 tabular-nums">
-                                                    {new Date(log.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                                    {new Date(log.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                                                 </span>
                                             </div>
                                         ))}

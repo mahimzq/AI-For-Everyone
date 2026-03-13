@@ -22,6 +22,29 @@ import Dashboard from './components/admin/Dashboard'
 import VerifyTicket from './components/public/VerifyTicket'
 
 function LandingPage() {
+    const [isRegistered, setIsRegistered] = useState(() => {
+        return !!localStorage.getItem('last_registration_email')
+    })
+
+    useEffect(() => {
+        // Listen for registration events dispatched from RegistrationForm
+        const handleRegistered = () => setIsRegistered(true)
+        window.addEventListener('user-registered', handleRegistered)
+
+        // Also listen for storage changes (e.g. from another tab)
+        const handleStorage = (e) => {
+            if (e.key === 'last_registration_email' && e.newValue) {
+                setIsRegistered(true)
+            }
+        }
+        window.addEventListener('storage', handleStorage)
+
+        return () => {
+            window.removeEventListener('user-registered', handleRegistered)
+            window.removeEventListener('storage', handleStorage)
+        }
+    }, [])
+
     return (
         <>
             <Navbar />
@@ -35,7 +58,7 @@ function LandingPage() {
                 <Speakers />
                 <WhoShouldAttend />
                 <Benefits />
-                <Resources />
+                {isRegistered && <Resources />}
                 <RegistrationForm />
                 <Contact />
             </main>
