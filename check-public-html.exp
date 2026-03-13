@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+log_file -noappend /tmp/check_public_html.log
+set timeout 10
+set password "Mahim@9898@@"
+
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "ls -la /var/www/ai4you.mindsetai.cloud/public_html/\r"
+expect "$ "
+send "exit\r"
+expect eof

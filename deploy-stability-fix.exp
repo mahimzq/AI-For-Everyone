@@ -1,0 +1,40 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+# Upload proxy.php
+spawn scp -P 65002 proxy.php root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/proxy.php
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload ecosystem.config.js
+spawn scp -P 65002 ecosystem.config.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/ecosystem.config.js
+expect {
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload watchdog.sh
+spawn scp -P 65002 watchdog.sh root@187.124.113.85:~/watchdog.sh
+expect {
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Restart PM2 via SSH
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+send "PM2=./server/node_modules/.bin/pm2\r"
+send "\$PM2 reload ecosystem.config.js --env production\r"
+send "\$PM2 save\r"
+send "exit\r"
+
+expect eof

@@ -1,0 +1,37 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+# Upload updated server file
+spawn scp -P 65002 server/server.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/server.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload watchdog script
+spawn scp -P 65002 watchdog.sh root@187.124.113.85:~/watchdog.sh
+expect "password:"
+send "$password\r"
+expect eof
+
+# Execute remote commands (permissions, cron, PM2 restart)
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+
+expect "$ "
+send "chmod +x ~/watchdog.sh\r"
+
+# Update cron to 5 minutes
+# Get current crontab, remove old watchdog entry, append new 5-minute watchdog entry
+send "(crontab -l | grep -v 'watchdog.sh' ; echo '*/5 * * * * /home/root/watchdog.sh') | crontab -\r"
+
+# Restart the API gracefully with the new code
+send "export PATH=\"\$PATH\"\r"
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+send "\$PM2 reload mindsetai-api\r"
+send "exit\r"
+
+expect eof

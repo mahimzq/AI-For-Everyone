@@ -1,0 +1,41 @@
+#!/usr/bin/expect -f
+set timeout 180
+set password "Mahim@9898@@"
+
+spawn ssh -o ServerAliveInterval=30  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "$ "
+send "export PATH=\$PATH\r"
+expect "$ "
+
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+expect "$ "
+
+# Hard kill
+send "npx pm2 kill; killall -9 node; killall npm; echo 'KILLED_ALL'\r"
+expect "KILLED_ALL"
+expect "$ "
+
+# Empty logs
+send "rm -f ~/.pm2/logs/*; rm -rf logs/*; echo 'LOGS_CLEARED'\r"
+expect "LOGS_CLEARED"
+expect "$ "
+
+# Start fresh
+send "NODE_ENV=production npx pm2 start ecosystem.config.js --env production\r"
+expect "$ "
+send "npx pm2 save\r"
+expect "$ "
+
+send "sleep 5 && curl -s http://127.0.0.1:5001/api/health && echo ''\r"
+expect "$ "
+
+send "npx pm2 logs --nostream\r"
+expect "$ "
+
+send "exit\r"
+expect eof

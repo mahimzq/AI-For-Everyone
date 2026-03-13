@@ -1,0 +1,40 @@
+#!/usr/bin/expect -f
+set timeout 60
+set password "Mahim@9898@@"
+
+spawn ssh -o ServerAliveInterval=30  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "$ "
+
+send "export PATH=\$PATH\r"
+expect "$ "
+
+# Check PM2 error logs
+send "cat /var/www/ai4you.mindsetai.cloud/logs/pm2-error.log 2>/dev/null || echo 'NO ERROR LOG'\r"
+expect "$ "
+
+# Check PM2 out logs
+send "tail -60 /var/www/ai4you.mindsetai.cloud/logs/pm2-out.log 2>/dev/null || echo 'NO OUT LOG'\r"
+expect "$ "
+
+# Also check PM2's own logs
+send "cat ~/.pm2/logs/ai-for-everybody-error.log 2>/dev/null | tail -40\r"
+expect "$ "
+
+send "cat ~/.pm2/logs/ai-for-everybody-out.log 2>/dev/null | tail -40\r"
+expect "$ "
+
+# Check .env file is correct
+send "cat /var/www/ai4you.mindsetai.cloud/server/.env\r"
+expect "$ "
+
+# Check what proxy Hostinger uses
+send "ls /var/www/ai4you.mindsetai.cloud/public_html/ 2>/dev/null; ls /var/www/ai4you.mindsetai.cloud/.htaccess 2>/dev/null; cat /var/www/ai4you.mindsetai.cloud/.htaccess 2>/dev/null || echo 'no htaccess'\r"
+expect "$ "
+
+send "exit\r"
+expect eof

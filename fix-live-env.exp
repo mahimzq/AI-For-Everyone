@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+set timeout 60
+set password "Mahim@9898@@"
+
+spawn ssh -o ServerAliveInterval=30  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "$ "
+send "export PATH=\$PATH\r"
+expect "$ "
+
+send "cat /var/www/ai4you.mindsetai.cloud/server/.env | grep DB_HOST\r"
+expect "$ "
+
+send "sed -i 's/DB_HOST=localhost/DB_HOST=127.0.0.1/g' /var/www/ai4you.mindsetai.cloud/server/.env\r"
+expect "$ "
+
+send "cat /var/www/ai4you.mindsetai.cloud/server/.env | grep DB_HOST\r"
+expect "$ "
+
+send "cd /var/www/ai4you.mindsetai.cloud && npx pm2 restart ai-for-everybody\r"
+expect "online"
+expect "$ "
+
+send "sleep 5 && npx pm2 logs --nostream --lines 10\r"
+expect "$ "
+
+send "curl -s http://127.0.0.1:5001/api/health && echo ''\r"
+expect "$ "
+
+send "exit\r"
+expect eof

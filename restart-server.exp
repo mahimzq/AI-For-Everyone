@@ -1,0 +1,65 @@
+#!/usr/bin/expect -f
+set timeout 180
+set password "Mahim@9898@@"
+
+spawn ssh -o ServerAliveInterval=30  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+# Wait for shell prompt
+expect "$ "
+
+# Set PATH
+send "export PATH=\$PATH\r"
+expect "$ "
+
+# Navigate to project
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+expect "$ "
+
+# Create logs directory
+send "mkdir -p logs\r"
+expect "$ "
+
+# Kill any existing node processes
+send "cat app.pid 2>/dev/null | xargs kill -9 2>/dev/null; pkill -f 'node server' 2>/dev/null; echo 'OLD PROCESSES KILLED'\r"
+expect "OLD PROCESSES KILLED"
+expect "$ "
+
+# Delete old PM2 processes
+send "npx pm2 delete all 2>/dev/null; echo 'PM2_CLEARED'\r"
+expect "PM2_CLEARED"
+expect "$ "
+
+# Start PM2 with ecosystem config
+send "NODE_ENV=production npx pm2 start ecosystem.config.js --env production\r"
+expect {
+    "online" { puts "\n✅ PM2 started successfully" }
+    "errored" { puts "\n❌ PM2 start errored"; }
+    timeout { puts "\n⏰ PM2 start timed out" }
+}
+expect "$ "
+
+# Save PM2 config
+send "npx pm2 save\r"
+expect "$ "
+
+# Show PM2 status
+send "npx pm2 list\r"
+expect "$ "
+
+# Wait and health check
+send "sleep 5 && curl -s http://127.0.0.1:5001/api/health && echo ''\r"
+expect {
+    "\"status\":\"ok\"" { puts "\n✅ Health check PASSED" }
+    "Could not connect" { puts "\n❌ Health check FAILED - server not responding" }
+    timeout { puts "\n⏰ Health check timed out" }
+}
+expect "$ "
+
+send "exit\r"
+expect eof
+
+puts "\n✅ Deployment session complete!"

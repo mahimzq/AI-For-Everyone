@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+set password "Mahim@9898@@"
+spawn scp -P 65002 setup-pm2.sh root@187.124.113.85:~/
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+spawn ssh  root@187.124.113.85 "chmod +x ~/setup-pm2.sh && ~/setup-pm2.sh > ~/pm2-setup.log 2>&1"
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof

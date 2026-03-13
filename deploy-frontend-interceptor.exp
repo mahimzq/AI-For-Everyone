@@ -1,0 +1,19 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+spawn scp -P 65002 -r client/dist/ root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "mv /var/www/ai4you.mindsetai.cloud/public_html/dist/* /var/www/ai4you.mindsetai.cloud/public_html/\r"
+send "rm -rf /var/www/ai4you.mindsetai.cloud/public_html/dist\r"
+send "exit\r"
+expect eof

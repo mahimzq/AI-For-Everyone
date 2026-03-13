@@ -1,0 +1,39 @@
+#!/usr/bin/expect -f
+log_file -noappend /tmp/full_deploy.log
+set timeout -1
+set password "Mahim@9898@@"
+
+# Login
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+expect "$ "
+
+# Build the frontend on the live server just to be 100% sure
+send "cd /var/www/ai4you.mindsetai.cloud/client\r"
+expect "$ "
+send "npm run build\r"
+expect "$ "
+
+# Clear the public_html directory EXCEPT the proxy and necessary files
+send "cd /var/www/ai4you.mindsetai.cloud/public_html\r"
+expect "$ "
+send "rm -rf assets/\r"
+expect "$ "
+send "rm -f index.html\r"
+expect "$ "
+
+# Copy over the freshly built dist folder
+send "cp -r /var/www/ai4you.mindsetai.cloud/client/dist/* .\r"
+expect "$ "
+
+# Hard restart the PM2 backend
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+expect "$ "
+send "\$PM2 reload ecosystem.config.js --env production\r"
+expect "$ "
+
+send "exit\r"
+expect eof

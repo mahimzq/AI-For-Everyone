@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+# Upload frontend build
+spawn rsync -avz -e "ssh " client/dist/ root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/client/dist/
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload backend route
+spawn scp -P 65002 server/routes/registrations.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/routes/registrations.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Restart PM2 via SSH
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+send "PM2=./server/node_modules/.bin/pm2\r"
+send "\$PM2 reload mindsetai-api\r"
+send "exit\r"
+
+expect eof

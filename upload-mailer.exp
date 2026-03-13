@@ -1,0 +1,27 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+spawn scp -P 65002 server/utils/mailer.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/utils/mailer.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+spawn scp -P 65002 server/workers/queueProcessor.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/workers/queueProcessor.js
+expect "password:"
+send "$password\r"
+expect eof
+
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+send "\$PM2 reload mindsetai-api\r"
+send "exit\r"
+
+expect eof

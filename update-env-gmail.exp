@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+set timeout -1
+spawn ssh  root@187.124.113.85
+
+expect "password:"
+send "Mahim@9898@@\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "cd /var/www/ai4you.mindsetai.cloud/server\r"
+
+# Update .env using sed
+send "sed -i 's/^SMTP_HOST=.*/SMTP_HOST=smtp.gmail.com/' .env\r"
+send "sed -i 's/^SMTP_PORT=.*/SMTP_PORT=465/' .env\r"
+send "sed -i 's/^SMTP_SECURE=.*/SMTP_SECURE=true/' .env\r"
+send "sed -i 's/^SMTP_USER=.*/SMTP_USER=mahimzq1@gmail.com/' .env\r"
+send "sed -i 's/^SMTP_PASSWORD=.*/SMTP_PASSWORD=dezlwvuqwwsqtvsz/' .env\r"
+send "sed -i 's/^EMAIL_FROM=.*/EMAIL_FROM=\"AI For Everybody\" <mahimzq1@gmail.com>/' .env\r"
+
+send "echo '\n=== Current SMTP Settings in .env ==='\r"
+send "grep '^SMTP_' .env\r"
+send "grep '^EMAIL_FROM' .env\r"
+
+send "cd ..\r"
+send "PM2=./server/node_modules/.bin/pm2\r"
+send "\$PM2 reload mindsetai-api --update-env\r"
+send "\$PM2 save\r"
+send "exit\r"
+
+expect eof

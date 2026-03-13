@@ -1,0 +1,19 @@
+#!/usr/bin/expect -f
+set timeout 60
+set password "Mahim@9898@@"
+
+spawn ssh -o ServerAliveInterval=30  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "$ "
+send "export PATH=\$PATH\r"
+expect "$ "
+
+send "cd /var/www/ai4you.mindsetai.cloud/server && NODE_ENV=production node seedAdmin.js\r"
+expect "$ "
+
+send "exit\r"
+expect eof

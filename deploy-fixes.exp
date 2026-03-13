@@ -1,0 +1,59 @@
+#!/usr/bin/expect -f
+# ══════════════════════════════════════════════
+# Deploy stability fixes to Hostinger
+# Uploads: server.js, config/db.js, .env.production, ecosystem.config.js
+# Then restarts PM2 with crash recovery
+# ══════════════════════════════════════════════
+
+set timeout 120
+set password "Mahim@9898@@"
+set host "root@187.124.113.85"
+set port "65002"
+set remote_base "/var/www/ai4you.mindsetai.cloud"
+
+# ── Step 1: Upload server.js ──
+puts "\n📤 Uploading server.js..."
+spawn scp -P $port server/server.js $host:$remote_base/server/server.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# ── Step 2: Upload config/db.js ──
+puts "\n📤 Uploading config/db.js..."
+spawn scp -P $port server/config/db.js $host:$remote_base/server/config/db.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# ── Step 3: Upload .env.production as .env ──
+puts "\n📤 Uploading .env.production → .env..."
+spawn scp -P $port server/.env.production $host:$remote_base/server/.env
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# ── Step 4: Upload ecosystem.config.js ──
+puts "\n📤 Uploading ecosystem.config.js..."
+spawn scp -P $port ecosystem.config.js $host:$remote_base/ecosystem.config.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# ── Step 5: SSH in → create logs dir, kill old process, restart with PM2 ──
+puts "\n🚀 Restarting server with PM2..."
+spawn ssh -p $port $host "export PATH=\$PATH && cd $remote_base && mkdir -p logs && cd server && cat ../app.pid 2>/dev/null | xargs kill -9 2>/dev/null; pkill -f 'node server/server.js' 2>/dev/null; pkill -f 'node server.js' 2>/dev/null; npx pm2 delete all 2>/dev/null; cd .. && NODE_ENV=production npx pm2 start ecosystem.config.js --env production && npx pm2 save && npx pm2 list && sleep 3 && curl -s http://127.0.0.1:5001/api/health"
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+puts "\n✅ Deployment complete!"

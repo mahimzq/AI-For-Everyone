@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+set password "Mahim@9898@@"
+spawn scp -P 65002 add-second-admin.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+spawn ssh  root@187.124.113.85 "cd /var/www/ai4you.mindsetai.cloud/server && /opt/alt/alt-nodejs20/root/usr/bin/node add-second-admin.js"
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof

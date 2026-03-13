@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+spawn ssh  root@187.124.113.85
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+
+expect "$ "
+
+send "export PATH=\"\$PATH\"\r"
+expect "$ "
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+expect "$ "
+
+# Make watchdog executable
+send "chmod +x ~/watchdog.sh\r"
+expect "$ "
+
+# Add to cron every 2 minutes (remove old entry first)
+send "(crontab -l 2>/dev/null | grep -v watchdog; echo '*/2 * * * * ~/watchdog.sh') | crontab -\r"
+expect "$ "
+send "echo 'Cron set:'\r"
+expect "$ "
+send "crontab -l\r"
+expect "$ "
+
+# Rename PM2 app: delete old, start with new ecosystem
+send "echo 'Renaming PM2 app...'\r"
+expect "$ "
+send "\$PM2 delete ai-for-everybody 2>/dev/null; true\r"
+expect "$ "
+send "cd /var/www/ai4you.mindsetai.cloud && NODE_ENV=production \$PM2 start ecosystem.config.js --env production\r"
+expect "$ "
+send "sleep 3\r"
+expect "$ "
+send "\$PM2 save\r"
+expect "$ "
+send "\$PM2 list\r"
+expect "$ "
+
+# Final health check
+send "curl -s http://127.0.0.1:5001/api/health\r"
+expect "$ "
+send "echo ''\r"
+expect "$ "
+
+send "exit\r"
+expect eof

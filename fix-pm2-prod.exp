@@ -1,0 +1,18 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+send "\$PM2 delete mindsetai-api\r"
+send "\$PM2 start ecosystem.config.js --env production\r"
+send "\$PM2 save\r"
+send "exit\r"
+
+expect eof

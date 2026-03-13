@@ -1,0 +1,47 @@
+#!/usr/bin/expect -f
+log_file -noappend /tmp/deploy_restart.log
+set timeout -1
+set password "Mahim@9898@@"
+
+# Upload admin route
+spawn scp -P 65002 server/routes/admin.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/routes/admin.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload server.js
+spawn scp -P 65002 server/server.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/server.js
+expect "password:"
+send "$password\r"
+expect eof
+
+# Upload Dashboard.jsx
+spawn scp -P 65002 client/src/components/admin/Dashboard.jsx root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/client/src/components/admin/Dashboard.jsx
+expect "password:"
+send "$password\r"
+expect eof
+
+# Server login
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+expect "$ "
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+expect "$ "
+
+# Reload Backend PM2
+send "\$PM2 reload ecosystem.config.js --env production\r"
+expect "$ "
+
+# Rebuild Frontend
+send "cd /var/www/ai4you.mindsetai.cloud/client\r"
+expect "$ "
+send "npm run build\r"
+expect "$ "
+
+send "exit\r"
+expect eof

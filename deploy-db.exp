@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+log_file -noappend /tmp/deploy_db.log
+set timeout -1
+set password "Mahim@9898@@"
+
+# Upload sqliteBackup.js
+spawn scp -P 65002 server/config/sqliteBackup.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/config/sqliteBackup.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload db.js
+spawn scp -P 65002 server/config/db.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/config/db.js
+expect "password:"
+send "$password\r"
+expect eof
+
+# Upload Models
+spawn scp -P 65002 server/models/Registration.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/models/Registration.js
+expect "password:"
+send "$password\r"
+expect eof
+
+spawn scp -P 65002 server/models/ContactMessage.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/models/ContactMessage.js
+expect "password:"
+send "$password\r"
+expect eof
+
+spawn scp -P 65002 server/models/Resource.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/models/Resource.js
+expect "password:"
+send "$password\r"
+expect eof
+

@@ -1,0 +1,28 @@
+#!/usr/bin/expect -f
+log_file -noappend /tmp/deploy_dist.log
+set timeout -1
+set password "Mahim@9898@@"
+
+# Upload production frontend build
+spawn scp -P 65002 -r client/dist root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/client/
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Server login to restart PM2
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+expect "$ "
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+expect "$ "
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+expect "$ "
+send "\$PM2 reload ecosystem.config.js --env production\r"
+expect "$ "
+send "exit\r"
+expect eof

@@ -1,0 +1,18 @@
+#!/usr/bin/expect -f
+log_file -noappend /tmp/deploy_auth.log
+set timeout 30
+set password "Mahim@9898@@"
+
+# Upload proxy.php
+spawn scp -P 65002 proxy.php root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/proxy.php
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload .htaccess
+spawn scp -P 65002 remote.htaccess root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/.htaccess
+expect "password:"
+send "$password\r"
+expect eof

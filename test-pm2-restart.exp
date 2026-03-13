@@ -1,0 +1,20 @@
+#!/usr/bin/expect -f
+set timeout -1
+spawn ssh  root@187.124.113.85
+
+expect "password:"
+send "Mahim@9898@@\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+send "PM2=./server/node_modules/.bin/pm2\r"
+send "echo '\n=== Current PM2 List ==='\r"
+send "\$PM2 list\r"
+send "echo '\n=== Testing pm2 restart ecosystem.config.js ==='\r"
+send "\$PM2 restart ecosystem.config.js --env production\r"
+send "echo '\n=== PM2 List After Restart ==='\r"
+send "\$PM2 list\r"
+send "exit\r"
+
+expect eof

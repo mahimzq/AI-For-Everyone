@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+# Temporary deployment helper: upload recovered SQLite + merge script, run merge into MySQL, then clean artifacts
+
+set timeout 300
+set password "Mahim@9898@@"
+set host "root@187.124.113.85"
+set port "65002"
+set remote_base "/var/www/ai4you.mindsetai.cloud"
+
+# ── Upload merge script ──
+puts "\n📤 Uploading scripts/merge-database.js..."
+spawn scp -P $port server/scripts/merge-database.js $host:$remote_base/server/scripts/merge-database.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# ── Upload recovered SQLite dump ──
+puts "\n📤 Uploading recovered-database.sqlite..."
+spawn scp -P $port server/recovered-database.sqlite $host:$remote_base/server/recovered-database.sqlite
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# ── Run merge on the server ──
+puts "\n🚀 Installing sqlite3 temporarily and running merge..."
+set remote_cmd "export PATH=\\$PATH && cd $remote_base/server && npm install sqlite3 --no-save && node scripts/merge-database.js && npm uninstall sqlite3 --no-save && rm -f recovered-database.sqlite scripts/merge-database.js recovered-server.js"
+spawn ssh -p $port $host $remote_cmd
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+puts "\n✅ Merge routine finished (check output above)."

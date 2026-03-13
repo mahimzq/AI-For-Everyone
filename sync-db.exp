@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+log_file -noappend /tmp/sync_db.log
+set timeout -1
+set password "Mahim@9898@@"
+
+# Create the scripts directory
+spawn ssh  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect "$ "
+send "mkdir -p /var/www/ai4you.mindsetai.cloud/server/scripts\r"
+expect "$ "
+send "exit\r"
+expect eof
+
+# Upload the sync script
+spawn scp -P 65002 server/scripts/syncToSqlite.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/scripts/syncToSqlite.js
+expect "password:"
+send "$password\r"
+expect eof
+
+# Run the sync script on the server
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+expect "$ "
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+expect "$ "
+send "node server/scripts/syncToSqlite.js\r"
+expect "$ "
+send "exit\r"
+expect eof

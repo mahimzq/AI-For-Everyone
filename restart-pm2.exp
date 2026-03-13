@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+set timeout 30
+set password "Mahim@9898@@"
+
+spawn ssh  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect "$ "
+
+# Upload the new ecosystem config
+send "cat << 'EOF' > /var/www/ai4you.mindsetai.cloud/ecosystem.config.js\n"
+send "module.exports = \{\n"
+send "    apps: \[\n"
+send "        \{\n"
+send "            name: 'mindsetai-api',\n"
+send "            script: './server/server.js',\n"
+send "            instances: 1,\n"
+send "            exec_mode: 'cluster',\n"
+send "            env: \{ NODE_ENV: 'development', PORT: 5001 \},\n"
+send "            env_production: \{ NODE_ENV: 'production', PORT: 5001 \},\n"
+send "            autorestart: true,\n"
+send "            min_uptime: '10s',\n"
+send "            restart_delay: 5000,\n"
+send "            exp_backoff_restart_delay: 100,\n"
+send "            max_memory_restart: '300M',\n"
+send "            cron_restart: '0 4 * * *',\n"
+send "            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',\n"
+send "            error_file: './logs/pm2-error.log',\n"
+send "            out_file: './logs/pm2-out.log',\n"
+send "            merge_logs: true,\n"
+send "            log_type: 'json',\n"
+send "            watch: false,\n"
+send "            kill_timeout: 5000,\n"
+send "        \},\n"
+send "    \],\n"
+send "\}\n"
+send "EOF\n"
+expect "$ "
+
+# Restart PM2
+send "export PATH=\"\$PATH\"\r"
+expect "$ "
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+expect "$ "
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+expect "$ "
+send "\$PM2 reload ecosystem.config.js --env production --update-env\r"
+expect "$ "
+send "\$PM2 save\r"
+expect "$ "
+send "\$PM2 status\r"
+expect "$ "
+send "exit\r"
+expect eof

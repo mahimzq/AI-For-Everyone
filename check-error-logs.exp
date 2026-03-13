@@ -1,0 +1,18 @@
+#!/usr/bin/expect -f
+set timeout -1
+spawn ssh  root@187.124.113.85
+
+expect "password:"
+send "Mahim@9898@@\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "echo '\n=== PM2 ERROR LOG ==='\r"
+send "tail -n 100 /var/www/ai4you.mindsetai.cloud/logs/pm2-error.log\r"
+send "echo '\n=== PM2 OUT LOG ==='\r"
+send "tail -n 100 /var/www/ai4you.mindsetai.cloud/logs/pm2-out.log\r"
+send "echo '\n=== WATCHDOG LOG ==='\r"
+send "tail -n 50 ~/watchdog.log\r"
+send "exit\r"
+
+expect eof

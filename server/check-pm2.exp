@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+set password "Mahim@9898@@"
+spawn ssh  root@187.124.113.85 "cd /var/www/ai4you.mindsetai.cloud/server && npx pm2 status && curl -I http://127.0.0.1:5001/api/health"
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+expect eof

@@ -1,0 +1,44 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+# Check if workers dir exists, create if not
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "mkdir -p /var/www/ai4you.mindsetai.cloud/server/utils /var/www/ai4you.mindsetai.cloud/server/workers\r"
+send "exit\r"
+expect eof
+
+# Upload missing files
+spawn scp -P 65002 server/utils/registrationQueue.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/utils/registrationQueue.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+spawn scp -P 65002 server/workers/queueProcessor.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/workers/queueProcessor.js
+expect "password:"
+send "$password\r"
+expect eof
+
+# Also upload server.js in case it was modified to start the queue
+spawn scp -P 65002 server/server.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/server.js
+expect "password:"
+send "$password\r"
+expect eof
+
+# Restart PM2
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+send "PM2=./server/node_modules/.bin/pm2\r"
+send "\$PM2 restart mindsetai-api\r"
+send "exit\r"
+
+expect eof

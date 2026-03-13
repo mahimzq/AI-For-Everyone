@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+# Upload index.html
+spawn scp -P 65002 client/dist/index.html root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/index.html
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload the new JS bundle
+spawn scp -P 65002 client/dist/assets/index-DSsdcbPD.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/assets/index-DSsdcbPD.js
+expect "password:"
+send "$password\r"
+expect eof
+
+# Upload the CSS bundle
+spawn scp -P 65002 client/dist/assets/index-DJy6Skj-.css root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/assets/index-DJy6Skj-.css
+expect "password:"
+send "$password\r"
+expect eof
+
+# Check PM2 logs
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+send "\$PM2 logs mindsetai-api --lines 30 --nostream 2>&1\r"
+expect "$ "
+send "exit\r"
+expect eof

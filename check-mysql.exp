@@ -1,0 +1,16 @@
+#!/usr/bin/expect -f
+set timeout 30
+set password "Mahim@9898@@"
+
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "mysql -u root_ai4u -p'Mahim@9898@@' root_ai4u -e 'DESCRIBE registrations;' 2>&1\r"
+expect -timeout 15 "$ "
+send "mysql -u root_ai4u -p'Mahim@9898@@' root_ai4u -e \"ALTER TABLE registrations ADD COLUMN transaction_id VARCHAR(100) DEFAULT 'N/A';\" 2>&1\r"
+expect -timeout 15 "$ "
+send "mysql -u root_ai4u -p'Mahim@9898@@' root_ai4u -e 'DESCRIBE registrations;' 2>&1\r"
+expect -timeout 15 "$ "
+send "exit\r"
+expect eof

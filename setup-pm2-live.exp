@@ -1,0 +1,128 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+spawn ssh  root@187.124.113.85
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+
+expect "$ "
+
+# Set PATH
+send "export PATH=\"\$PATH\"\r"
+expect "$ "
+
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+expect "$ "
+send "APP_DIR=/var/www/ai4you.mindsetai.cloud\r"
+expect "$ "
+
+# ─── STEP 1: Unzip server update ───
+send "echo '=== STEP 1: Deploying server files ==='\r"
+expect "$ "
+send "cd \$APP_DIR && unzip -o deploy-server.zip -d server/ 2>&1 | tail -5\r"
+expect "$ "
+
+# ─── STEP 2: Kill ALL old nohup/plain node processes ───
+send "echo '=== STEP 2: Killing old nohup processes ==='\r"
+expect "$ "
+send "pkill -f 'node server/server.js' 2>/dev/null; pkill -f 'node server.js' 2>/dev/null; cat \$APP_DIR/app.pid 2>/dev/null | xargs kill 2>/dev/null; rm -f \$APP_DIR/app.pid; echo 'Done'\r"
+expect "$ "
+send "sleep 2\r"
+expect "$ "
+
+# ─── STEP 3: Delete old PM2 processes, start fresh with new name ───
+send "echo '=== STEP 3: Starting mindsetai-api with PM2 ==='\r"
+expect "$ "
+send "\$PM2 delete all 2>/dev/null; echo 'Cleared'\r"
+expect "$ "
+send "cd \$APP_DIR && NODE_ENV=production \$PM2 start ecosystem.config.js --env production\r"
+expect "$ "
+send "sleep 3\r"
+expect "$ "
+
+# ─── STEP 4: Verify PM2 status ───
+send "echo '=== STEP 4: PM2 Status ==='\r"
+expect "$ "
+send "\$PM2 list\r"
+expect "$ "
+
+# ─── STEP 5: Save PM2 state + startup ───
+send "echo '=== STEP 5: PM2 Save & Startup ==='\r"
+expect "$ "
+send "\$PM2 save\r"
+expect "$ "
+send "\$PM2 startup 2>&1 || true\r"
+expect "$ "
+
+# ─── STEP 6: pm2-logrotate ───
+send "echo '=== STEP 6: pm2-logrotate ==='\r"
+expect "$ "
+send "\$PM2 install pm2-logrotate 2>&1 | tail -3\r"
+expect "$ "
+send "\$PM2 set pm2-logrotate:max_size 50M 2>&1 | tail -1\r"
+expect "$ "
+send "\$PM2 set pm2-logrotate:retain 10 2>&1 | tail -1\r"
+expect "$ "
+send "\$PM2 set pm2-logrotate:compress true 2>&1 | tail -1\r"
+expect "$ "
+
+# ─── STEP 7: Create watchdog.sh ───
+send "echo '=== STEP 7: Creating watchdog.sh ==='\r"
+expect "$ "
+send "cat > ~/watchdog.sh << 'WATCHDOG_EOF'\r"
+send "#!/bin/bash\r"
+send "export PATH=\"\$PATH\"\r"
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+send "URL=\"https://aiforeveryone.mindsetai.co.uk/api/health\"\r"
+send "LOG=~/watchdog.log\r"
+send "\r"
+send "STATUS=\$(curl -s -o /dev/null -w \"%{http_code}\" --max-time 10 \$URL)\r"
+send "\r"
+send "if \\[ \"\$STATUS\" != \"200\" \\]; then\r"
+send "    echo \"\$(date): Health check FAILED (status=\$STATUS). Restarting PM2...\" >> \$LOG\r"
+send "    \$PM2 restart mindsetai-api 2>&1 >> \$LOG\r"
+send "else\r"
+send "    echo \"\$(date): Health check OK\" >> \$LOG\r"
+send "fi\r"
+send "\r"
+send "# Keep log file small (last 200 lines)\r"
+send "tail -200 \$LOG > \$LOG.tmp && mv \$LOG.tmp \$LOG 2>/dev/null\r"
+send "WATCHDOG_EOF\r"
+expect "$ "
+send "chmod +x ~/watchdog.sh\r"
+expect "$ "
+send "echo 'Watchdog created'\r"
+expect "$ "
+
+# ─── STEP 8: Add watchdog to cron (every 2 minutes) ───
+send "echo '=== STEP 8: Setting up cron ==='\r"
+expect "$ "
+send "(crontab -l 2>/dev/null | grep -v watchdog; echo '*/2 * * * * ~/watchdog.sh') | crontab -\r"
+expect "$ "
+send "crontab -l | tail -3\r"
+expect "$ "
+
+# ─── STEP 9: Health check ───
+send "echo '=== STEP 9: Final Health Check ==='\r"
+expect "$ "
+send "sleep 2 && curl -s http://127.0.0.1:5001/api/health\r"
+expect "$ "
+send "echo ''\r"
+expect "$ "
+
+# ─── STEP 10: Final PM2 status ───
+send "echo '=== FINAL PM2 STATUS ==='\r"
+expect "$ "
+send "\$PM2 list\r"
+expect "$ "
+
+send "exit\r"
+expect eof

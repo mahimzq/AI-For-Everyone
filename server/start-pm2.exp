@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+set password "Mahim@9898@@"
+spawn ssh  root@187.124.113.85 "cd /var/www/ai4you.mindsetai.cloud/server && npm install pm2 && npx pm2 start server.js --name 'ai-api' --env NODE_ENV=production && npx pm2 save"
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+expect eof

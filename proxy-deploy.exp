@@ -1,0 +1,9 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+spawn scp -P 65002 proxy.php root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/api/index.php
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof

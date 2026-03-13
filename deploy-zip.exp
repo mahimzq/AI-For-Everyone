@@ -1,0 +1,28 @@
+#!/usr/bin/expect -f
+log_file -noappend /tmp/deploy_zip.log
+set timeout -1
+set password "Mahim@9898@@"
+
+# Upload zip
+spawn scp -P 65002 client/dist.zip root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/dist.zip
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Extract to public_html and cleanup
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+expect "$ "
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+expect "$ "
+send "unzip -o dist.zip -d public_html_temp\r"
+expect "$ "
+send "cp -rf public_html_temp/dist/* public_html/\r"
+expect "$ "
+send "rm -rf public_html_temp dist.zip\r"
+expect "$ "
+send "exit\r"
+expect eof

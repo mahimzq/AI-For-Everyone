@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+set password "Mahim@9898@@"
+spawn ssh  root@187.124.113.85 "export PATH=\$PATH && cd /var/www/ai4you.mindsetai.cloud && unzip -o deploy-server.zip -d server/ && ./server/node_modules/.bin/pm2 reload ecosystem.config.js --env production && ./server/node_modules/.bin/pm2 save && sleep 2 && curl -s http://127.0.0.1:5001/api/health"
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+expect eof

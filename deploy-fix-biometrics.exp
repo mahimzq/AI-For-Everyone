@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+set host "root@187.124.113.85"
+set dir "/var/www/ai4you.mindsetai.cloud"
+
+# Upload webauthn.js
+spawn scp ./server/routes/webauthn.js $host:$dir/server/routes/webauthn.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload chatSocket.js
+spawn scp ./server/chatSocket.js $host:$dir/server/chatSocket.js
+expect {
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Upload built frontend
+spawn scp -r ./client/dist/ $host:$dir/public_html/
+expect {
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Reload PM2
+spawn ssh $host
+expect {
+    "password:" { send "$password\r" }
+}
+expect "# "
+send "cd $dir && pm2 reload ecosystem.config.js --env production\r"
+expect "# "
+send "exit\r"
+expect eof

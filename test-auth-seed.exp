@@ -1,0 +1,19 @@
+#!/usr/bin/expect -f
+set timeout 60
+set password "Mahim@9898@@"
+
+spawn ssh -o ServerAliveInterval=30  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "$ "
+send "export PATH=\$PATH\r"
+expect "$ "
+
+send "curl -w \"\\nHTTP_STATUS:%{http_code}\\n\" -s -X POST http://127.0.0.1:5001/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@mindset.com\",\"password\":\"Admin123\"}'\r"
+expect "$ "
+
+send "exit\r"
+expect eof

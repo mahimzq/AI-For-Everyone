@@ -1,0 +1,23 @@
+#!/usr/bin/expect -f
+log_file -noappend /tmp/mysql_check.log
+set timeout 30
+set password "Mahim@9898@@"
+
+spawn ssh  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect "$ "
+send "mysql -u root_ai4u -p'Mahim@9898@@' root_ai4u -e 'DESCRIBE registrations;'\r"
+expect "$ "
+send "mysql -u root_ai4u -p'Mahim@9898@@' root_ai4u -e \"ALTER TABLE registrations ADD COLUMN transaction_id VARCHAR(100) DEFAULT 'N/A';\" 2>&1\r"
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+expect "$ "
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+expect "$ "
+send "\$PM2 restart mindsetai-api\r"
+expect "$ "
+send "exit\r"
+expect eof

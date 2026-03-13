@@ -1,0 +1,31 @@
+#!/usr/bin/expect -f
+set timeout 60
+set password "Mahim@9898@@"
+
+spawn ssh -o ServerAliveInterval=30  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "$ "
+send "export PATH=\$PATH\r"
+expect "$ "
+
+# Start watchdog
+send "nohup bash /var/www/ai4you.mindsetai.cloud/watchdog.sh > /dev/null 2>&1 &\r"
+expect "$ "
+
+send "sleep 1\r"
+expect "$ "
+
+# Verify watchdog PID exists
+send "cat /tmp/watchdog.pid 2>/dev/null && echo ' WATCHDOG_OK' || echo 'WATCHDOG_FAIL'\r"
+expect {
+    "WATCHDOG_OK" { puts "\n✅ Watchdog is now running" }
+    "WATCHDOG_FAIL" { puts "\n❌ Watchdog failed to start" }
+}
+expect "$ "
+
+send "exit\r"
+expect eof

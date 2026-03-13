@@ -1,0 +1,19 @@
+#!/usr/bin/expect -f
+set timeout -1
+spawn ssh  root@187.124.113.85
+
+expect "password:"
+send "Mahim@9898@@\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+send "PM2=./server/node_modules/.bin/pm2\r"
+send "echo '\n=== PM2 Error Logs (Last 100 lines) ==='\r"
+send "cat logs/pm2-error.log | tail -n 100\r"
+send "echo '\n=== Testing Start Manually ==='\r"
+send "cd server\r"
+send "node server.js\r"
+send "exit\r"
+
+expect eof

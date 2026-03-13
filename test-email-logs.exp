@@ -1,0 +1,16 @@
+#!/usr/bin/expect -f
+set timeout -1
+spawn ssh  root@187.124.113.85
+
+expect "password:"
+send "Mahim@9898@@\r"
+
+expect "$ "
+send "cat /var/www/ai4you.mindsetai.cloud/server/.env | grep SMTP\r"
+send "echo '\n=== PM2 Error Logs ==='\r"
+send "tail -n 100 /var/www/ai4you.mindsetai.cloud/logs/pm2-error.log\r"
+send "echo '\n=== PM2 Out Logs (Email related) ==='\r"
+send "grep -i 'email' /var/www/ai4you.mindsetai.cloud/logs/pm2-out.log | tail -n 20\r"
+send "exit\r"
+
+expect eof

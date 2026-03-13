@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+set password "Mahim@9898@@"
+spawn ssh  root@187.124.113.85 "mysql -u root_ai4u -pMahim@9898@@ root_ai4u -e 'SELECT id, username, email, role FROM admins;'"
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+expect eof

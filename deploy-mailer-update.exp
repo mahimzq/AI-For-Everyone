@@ -1,0 +1,25 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+# Upload mailer.js
+spawn scp -P 65002 server/utils/mailer.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/utils/mailer.js
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# Restart PM2 via SSH
+spawn ssh  root@187.124.113.85
+expect "password:"
+send "$password\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+send "PM2=./server/node_modules/.bin/pm2\r"
+send "\$PM2 reload mindsetai-api\r"
+send "exit\r"
+
+expect eof

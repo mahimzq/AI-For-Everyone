@@ -1,0 +1,44 @@
+#!/usr/bin/expect -f
+set timeout 120
+set password "Mahim@9898@@"
+
+spawn ssh -o ServerAliveInterval=30  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "$ "
+send "export PATH=\$PATH\r"
+expect "$ "
+
+# Verify before kill
+send "echo '=== BEFORE KILL ===' && curl -s -w ' HTTP:%{http_code}' http://127.0.0.1:5001/api/health && echo ''\r"
+expect "$ "
+
+# Force kill the Node.js process using LOCAL pm2 binary
+send "cd /var/www/ai4you.mindsetai.cloud && ./server/node_modules/.bin/pm2 delete all 2>/dev/null; ./server/node_modules/.bin/pm2 kill 2>/dev/null; echo 'NODE KILLED'\r"
+expect "$ "
+
+# Verify it's dead
+send "curl -s -w ' HTTP:%{http_code}' --connect-timeout 3 http://127.0.0.1:5001/api/health || echo ' (dead - expected)'\r"
+expect "$ "
+
+# Wait for watchdog to detect and recover (check interval is 60s)
+send "echo 'Waiting 75s for watchdog auto-recovery...' && sleep 75\r"
+expect "$ "
+
+# Check if it recovered
+send "echo '=== AFTER WATCHDOG ===' && curl -s -w ' HTTP:%{http_code}' http://127.0.0.1:5001/api/health && echo ''\r"
+expect "$ "
+
+# Show watchdog log
+send "cat /var/www/ai4you.mindsetai.cloud/logs/watchdog.log 2>/dev/null | tail -10\r"
+expect "$ "
+
+# Show auto-restart log
+send "cat /var/www/ai4you.mindsetai.cloud/logs/auto-restart.log 2>/dev/null | tail -5\r"
+expect "$ "
+
+send "exit\r"
+expect eof

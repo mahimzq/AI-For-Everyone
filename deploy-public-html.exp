@@ -1,0 +1,16 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+
+spawn ssh  root@187.124.113.85
+
+expect "password:"
+send "$password\r"
+
+expect "$ "
+send "cp -r /var/www/ai4you.mindsetai.cloud/client/dist/* /var/www/ai4you.mindsetai.cloud/public_html/\r"
+send "echo '\n=== Sync Details ==='\r"
+send "ls -la /var/www/ai4you.mindsetai.cloud/public_html\r"
+send "exit\r"
+
+expect eof

@@ -1,0 +1,20 @@
+#!/usr/bin/expect -f
+set timeout -1
+spawn ssh  root@187.124.113.85
+
+expect "password:"
+send "Mahim@9898@@\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "echo '\n=== PM2 LIST ==='\r"
+send "cd /var/www/ai4you.mindsetai.cloud && ./server/node_modules/.bin/pm2 list\r"
+send "echo '\n=== PM2 LOGS ==='\r"
+send "cd /var/www/ai4you.mindsetai.cloud && ./server/node_modules/.bin/pm2 logs --lines 50 --nostream\r"
+send "echo '\n=== MEMORY ==='\r"
+send "free -h\r"
+send "echo '\n=== DISK ==='\r"
+send "df -h\r"
+send "exit\r"
+
+expect eof

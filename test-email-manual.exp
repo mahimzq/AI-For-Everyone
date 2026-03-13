@@ -1,0 +1,23 @@
+#!/usr/bin/expect -f
+set timeout -1
+spawn ssh  root@187.124.113.85
+
+expect "password:"
+send "Mahim@9898@@\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "cd /var/www/ai4you.mindsetai.cloud\r"
+send "echo '\n=== Testing Email via Node Script ==='\r"
+send "cat > test-email.js << 'EOF'\r"
+send "require('dotenv').config({ path: './server/.env' });\r"
+send "const { sendConfirmationEmail } = require('./server/utils/mailer');\r"
+send "console.log('Using SMTP:', process.env.SMTP_HOST, process.env.SMTP_USER);\r"
+send "sendConfirmationEmail({ full_name: 'Direct Test', email: 'mahimzq1@gmail.com' })\r"
+send "  .then(res => console.log('Email sent:', res))\r"
+send "  .catch(err => console.error('Error:', err));\r"
+send "EOF\r"
+send "node test-email.js \r"
+send "exit\r"
+
+expect eof

@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+set timeout -1
+spawn ssh  root@187.124.113.85
+
+expect "password:"
+send "Mahim@9898@@\r"
+
+expect "$ "
+send "cat /var/www/ai4you.mindsetai.cloud/proxy.php | grep pm2_bin\r"
+send "cat ~/watchdog.sh\r"
+send "exit\r"
+
+expect eof

@@ -1,0 +1,53 @@
+#!/usr/bin/expect -f
+set timeout -1
+set password "Mahim@9898@@"
+set user "root"
+set host "187.124.113.85"
+set port "65002"
+set dest_dir "/var/www/ai4you.mindsetai.cloud/server"
+
+# 1. Zip the changed files locally
+spawn bash -c "cd server && zip -q -r architecture-upgrade.zip package.json package-lock.json server.js routes/analytics.js routes/registrations.js utils/mailer.js queue"
+expect eof
+
+# 2. Upload the zip
+spawn scp -P $port server/architecture-upgrade.zip $user@$host:$dest_dir/architecture-upgrade.zip
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# 3. SSH in, extract zip, npm install, check redis, restart PM2
+spawn ssh -p $port $user@$host
+expect "password:"
+send "$password\r"
+
+expect "$ "
+send "export PATH=\"\$PATH\"\r"
+send "cd $dest_dir\r"
+
+send "echo 'Unzipping changes...'\r"
+send "unzip -o architecture-upgrade.zip\r"
+expect "$ "
+
+send "echo 'Removing obsolete queue files...'\r"
+send "rm -f utils/registrationQueue.js workers/queueProcessor.js\r"
+expect "$ "
+
+send "echo 'Installing new dependencies...'\r"
+send "npm install\r"
+expect "$ "
+
+# Check Redis (if they have sudo, try installing. otherwise assume it's there or will fail gracefully)
+send "echo 'Pinging Redis...'\r"
+send "redis-cli ping\r"
+expect "$ "
+
+send "echo 'Restarting PM2...'\r"
+send "PM2=/var/www/ai4you.mindsetai.cloud/server/node_modules/.bin/pm2\r"
+send "\$PM2 reload ecosystem.config.js --env production || \$PM2 reload all\r"
+expect "$ "
+
+send "exit\r"
+expect eof

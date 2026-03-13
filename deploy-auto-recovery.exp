@@ -1,0 +1,67 @@
+#!/usr/bin/expect -f
+set timeout 120
+set password "Mahim@9898@@"
+
+# Upload proxy.php
+spawn scp -P 65002 proxy.php root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/proxy.php
+expect "password:" { send "$password\r" }
+expect eof
+
+# Upload watchdog.sh
+spawn scp -P 65002 watchdog.sh root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/watchdog.sh
+expect "password:" { send "$password\r" }
+expect eof
+
+# Upload ecosystem.config.js
+spawn scp -P 65002 ecosystem.config.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/ecosystem.config.js
+expect "password:" { send "$password\r" }
+expect eof
+
+# Upload server.js (latest)
+spawn scp -P 65002 server/server.js root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/server/server.js
+expect "password:" { send "$password\r" }
+expect eof
+
+# SSH in to restart everything and start watchdog
+spawn ssh -o ServerAliveInterval=30  root@187.124.113.85
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "$ "
+send "export PATH=\$PATH\r"
+expect "$ "
+
+# Make watchdog executable
+send "chmod +x /var/www/ai4you.mindsetai.cloud/watchdog.sh\r"
+expect "$ "
+
+# Create logs dir
+send "mkdir -p /var/www/ai4you.mindsetai.cloud/logs\r"
+expect "$ "
+
+# Kill old watchdog if running
+send "kill \$(cat /tmp/watchdog.pid 2>/dev/null) 2>/dev/null; rm -f /tmp/watchdog.pid\r"
+expect "$ "
+
+# Restart PM2 with new ecosystem config
+send "cd /var/www/ai4you.mindsetai.cloud && npx pm2 delete all 2>/dev/null; NODE_ENV=production npx pm2 start ecosystem.config.js --env production && npx pm2 save\r"
+expect "$ "
+
+# Start the watchdog daemon
+send "nohup bash /var/www/ai4you.mindsetai.cloud/watchdog.sh > /dev/null 2>&1 &\r"
+expect "$ "
+
+# Verify
+send "sleep 3\r"
+expect "$ "
+send "curl -s http://127.0.0.1:5001/api/health && echo ''\r"
+expect "$ "
+send "cat /tmp/watchdog.pid && echo ' — watchdog running'\r"
+expect "$ "
+send "npx pm2 list\r"
+expect "$ "
+
+send "exit\r"
+expect eof

@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+set password "Mahim@9898@@"
+spawn scp -P 65002 deploy-client.zip root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$password\r"
+    }
+}
+expect eof

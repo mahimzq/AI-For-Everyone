@@ -1,0 +1,26 @@
+#!/usr/bin/expect -f
+set timeout 180
+set password "Mahim@9898@@"
+set host "root@187.124.113.85"
+set port "65002"
+set remote_base "/var/www/ai4you.mindsetai.cloud"
+
+# ── Step 1: Upload marketing-patch.zip ──
+puts "\n📤 Uploading marketing-patch.zip..."
+spawn scp -P $port marketing-patch.zip $host:$remote_base/marketing-patch.zip
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# ── Step 2: Extract and restart PM2 ──
+puts "\n🚀 Restarting server with PM2..."
+spawn ssh -p $port $host "export PATH=\$PATH && cd $remote_base && unzip -o marketing-patch.zip && npx pm2 reload all && sleep 3 && curl -s http://127.0.0.1:5001/api/health"
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+puts "\n✅ Marketing Patch deployment complete!"
