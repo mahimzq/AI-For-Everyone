@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MapPin, Calendar, ArrowRight, ChevronDown, MessageCircle } from 'lucide-react'
 import ParticleBackground from '../shared/ParticleBackground'
 import CountdownTimer from '../shared/CountdownTimer'
 import axios from 'axios'
+import { useRegistrationStatus } from '../../context/RegistrationStatusContext'
 
 const heroImages = [
     '/images/hero-slide-1.png',
@@ -14,6 +15,7 @@ const heroImages = [
 export default function Hero() {
     const [currentSlide, setCurrentSlide] = useState(0)
     const [whatsappCount, setWhatsappCount] = useState('0')
+    const { closed: registrationClosed } = useRegistrationStatus()
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -157,6 +159,35 @@ export default function Hero() {
                     <CountdownTimer />
                 </motion.div>
 
+                {/* Registration Notice — always visible */}
+                <motion.div
+                    className={`mb-6 mx-auto max-w-xl px-5 py-4 rounded-2xl border text-center ${
+                        registrationClosed
+                            ? 'border-red-500/40 bg-red-500/10'
+                            : 'border-yellow-500/40 bg-yellow-500/10'
+                    }`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: [1, 0.4, 1] }}
+                    transition={{ delay: 1.3, duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                    {registrationClosed ? (
+                        <>
+                            <p className="text-red-400 font-heading font-bold text-sm mb-1">🔒 Online Registration Closed at 22:00 UK Time</p>
+                            <p className="text-slate-400 font-body text-xs">
+                                Still want to register? Contact the admin for direct registration via{' '}
+                                <a href="https://whatsapp.com/channel/0029Vb7TnfaLdQejJGEbbI3H" target="_blank" rel="noopener noreferrer" className="text-[#25D366] underline">WhatsApp</a>.
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-yellow-400 font-heading font-bold text-sm mb-1">⏰ Registration Closes Tonight at 22:00 UK Time</p>
+                            <p className="text-slate-400 font-body text-xs">
+                                Secure your spot now — registration closes at 22:00 UK time. After that, contact admin for direct registration.
+                            </p>
+                        </>
+                    )}
+                </motion.div>
+
                 {/* CTA Buttons */}
                 <motion.div
                     className="flex flex-col sm:flex-row gap-4 justify-center"
@@ -164,10 +195,12 @@ export default function Hero() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.4, duration: 0.6 }}
                 >
-                    <button onClick={() => scrollTo('#register')} className="btn-primary">
-                        Join the AI Movement
-                        <ArrowRight className="ml-2" size={18} />
-                    </button>
+                    {!registrationClosed && (
+                        <button onClick={() => scrollTo('#register')} className="btn-primary">
+                            Join the AI Movement
+                            <ArrowRight className="ml-2" size={18} />
+                        </button>
+                    )}
                     <button onClick={() => scrollTo('#mission')} className="btn-secondary">
                         Discover What You'll Learn
                         <ChevronDown className="ml-2" size={18} />

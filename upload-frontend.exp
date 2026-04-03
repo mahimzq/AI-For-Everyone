@@ -1,8 +1,8 @@
 #!/usr/bin/expect -f
 set timeout -1
-set password "Mahim@9898@@"
+set password "Speed@2020@@"
 
-spawn rsync -avz -e "ssh " client/dist/ root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/
+spawn rsync -avz -e "ssh" client/dist/ root@187.124.113.85:/var/www/ai4you.mindsetai.cloud/public_html/
 expect {
     "yes/no" { send "yes\r"; exp_continue }
     "password:" { send "$password\r" }

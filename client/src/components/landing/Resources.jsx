@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FileText, Download, X, Mail, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
+import { FileText, Download, X, Mail, CheckCircle2, Loader2, AlertCircle, Lock } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { useOnboarding } from '../../context/OnboardingContext'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
@@ -13,6 +15,8 @@ export default function Resources() {
     const [isDownloading, setIsDownloading] = useState(false)
     const [error, setError] = useState('')
     const modalRef = useRef(null)
+    const { completed } = useOnboarding()
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchResources = async () => {
@@ -40,8 +44,10 @@ export default function Resources() {
     }, [])
 
     const handleDownloadClick = (resource) => {
-        // If we already have an email (from registration), we might just trigger download
-        // but it's safer to show the modal once to confirm or let them change email
+        if (!completed) {
+            navigate('/onboarding?redirect=/#resources')
+            return
+        }
         setDownloadModal(resource)
     }
 
@@ -58,7 +64,9 @@ export default function Resources() {
         try {
             // Trigger download via window.location or a direct link
             // Using a hidden link to trigger the browser download behavior
-            const downloadUrl = `${API_URL}/api/resources/${downloadModal.id}/download?email=${encodeURIComponent(email)}`
+            // Reliably remove any trailing slashes or /api from the base URL
+            const cleanUrl = API_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '')
+            const downloadUrl = `${cleanUrl}/api/resources/${downloadModal.id}/download?email=${encodeURIComponent(email)}`
             
             // We use a link element to trigger the download so the browser handles it correctly
             const link = document.createElement('a')
@@ -143,8 +151,8 @@ export default function Resources() {
                                         onClick={() => handleDownloadClick(resource)}
                                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-green/10 text-primary-green text-sm font-bold hover:bg-primary-green hover:text-black transition-all border border-primary-green/30"
                                     >
-                                        <Download size={16} />
-                                        Download PDF
+                                        {completed ? <Download size={16} /> : <Lock size={16} />}
+                                        {completed ? 'Download PDF' : 'Unlock'}
                                     </button>
                                     <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                                         {resource.download_count} Downloads

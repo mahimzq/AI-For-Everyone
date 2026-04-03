@@ -1,6 +1,7 @@
 import { motion, useInView } from 'framer-motion'
 import { useRef, useState, useEffect } from 'react'
-import { Zap, Eye, Wrench } from 'lucide-react'
+import { Zap, Eye, Wrench, MessageCircle } from 'lucide-react'
+import axios from 'axios'
 
 function Counter({ end, duration = 2, suffix = '' }) {
     const [count, setCount] = useState(0)
@@ -31,6 +32,20 @@ function Counter({ end, duration = 2, suffix = '' }) {
 }
 
 export default function Mission() {
+    const [whatsappCount, setWhatsappCount] = useState('0')
+
+    useEffect(() => {
+        const fetchWhatsappCount = async () => {
+            try {
+                const res = await axios.get('/api/settings/whatsapp-count')
+                setWhatsappCount(res.data.count)
+            } catch (err) {
+                console.error('Failed to fetch whatsapp count:', err)
+            }
+        }
+        fetchWhatsappCount()
+    }, [])
+
     const pillCards = [
         { icon: <Eye size={20} />, label: 'Demystify', color: 'from-neon-blue to-neon-cyan' },
         { icon: <Zap size={20} />, label: 'Demonstrate', color: 'from-primary-green to-emerald-glow' },
@@ -113,18 +128,26 @@ export default function Mission() {
                                 With practical AI skills for career growth & economic opportunity
                             </p>
 
-                            {/* Progress bar */}
-                            <div className="mt-6 h-1.5 bg-white/5 rounded-full overflow-hidden relative z-10">
-                                <motion.div
-                                    className="h-full rounded-full"
-                                    style={{ background: 'linear-gradient(90deg, #7C3AED, #00C853)' }}
-                                    initial={{ width: '0%' }}
-                                    whileInView={{ width: '5%' }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: 1, duration: 1.5, ease: 'easeOut' }}
-                                />
+                            {/* WhatsApp Live Community - Replacing Progress Bar */}
+                            <div className="mt-8 pt-6 border-t border-white/10 relative z-10 flex flex-col items-center justify-center">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="w-3 h-3 rounded-full bg-[#25D366] animate-pulse shadow-[0_0_10px_#25D366]" />
+                                    <h4 className="text-white/80 font-heading text-sm font-bold uppercase tracking-widest">
+                                        WhatsApp Live Community
+                                    </h4>
+                                </div>
+                                <div className="flex items-center gap-4 bg-[#25D366]/10 border border-[#25D366]/30 py-4 px-8 rounded-2xl shadow-[0_0_20px_rgba(37,211,102,0.15)]">
+                                    <MessageCircle size={40} className="text-[#25D366]" />
+                                    <div className="text-left">
+                                        <div className="font-accent text-4xl sm:text-5xl font-bold text-white tracking-wide">
+                                            {Number(whatsappCount).toLocaleString()}
+                                        </div>
+                                        <div className="text-[#25D366] font-semibold text-sm uppercase tracking-wide">
+                                            Members Joined
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <p className="mt-2 text-xs text-slate-500 relative z-10">The movement begins...</p>
                         </div>
                     </motion.div>
                 </div>
@@ -132,3 +155,4 @@ export default function Mission() {
         </section>
     )
 }
+

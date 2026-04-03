@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Send, CheckCircle2, AlertCircle, Loader2, ChevronDown, Search, MessageCircle, ChevronRight, Download } from 'lucide-react'
 import axios from 'axios'
+import { useRegistrationStatus } from '../../context/RegistrationStatusContext'
 
 const countryCodes = [
     { code: '+237', country: 'Cameroon', flag: '🇨🇲' },
@@ -63,9 +64,9 @@ const schema = z.object({
     full_name: z.string().min(2, 'Name must be at least 2 characters'),
     email: z.string().email('Please enter a valid email address'),
     phone: z.string().min(8, 'Please enter a valid phone number'),
-    transaction_id: z.string().min(2, 'Payment transaction ID or MoMo number is required'),
-    profession: z.string().min(1, 'Please select your profession'),
-    ai_experience: z.string().min(1, 'Please select your AI experience level'),
+    transaction_id: z.string().optional(),
+    profession: z.string().optional(),
+    ai_experience: z.string().optional(),
     learning_goals: z.string().optional(),
     referral_source: z.string().optional(),
 })
@@ -90,6 +91,7 @@ const referrals = [
 
 export default function RegistrationForm() {
     const [status, setStatus] = useState('idle')
+    const { closed: registrationClosed } = useRegistrationStatus()
     const [selectedCountry, setSelectedCountry] = useState(countryCodes[0])
     const [countryDropdownOpen, setCountryDropdownOpen] = useState(false)
     const [countrySearch, setCountrySearch] = useState('')
@@ -250,6 +252,31 @@ export default function RegistrationForm() {
         )
     }
 
+    if (registrationClosed) {
+        return (
+            <section id="register" className="section-padding bg-primary-dark grid-bg relative overflow-hidden">
+                <div className="section-divider mb-16" />
+                <div className="container-max">
+                    <motion.div
+                        className="max-w-lg mx-auto text-center glass-card glow-border rounded-3xl p-10"
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <div className="text-5xl mb-6">🔒</div>
+                        <h3 className="heading-md text-white mb-4">Registration Closed</h3>
+                        <p className="body-text mb-2">
+                            Online registration has closed at 10:00 PM UK time.
+                        </p>
+                        <p className="text-gray-400 font-body text-sm">
+                            If you need to register, please contact the organizer directly.
+                        </p>
+                    </motion.div>
+                </div>
+            </section>
+        )
+    }
+
     return (
         <section id="register" className="section-padding bg-primary-dark grid-bg relative overflow-hidden">
             <div className="section-divider mb-16" />
@@ -389,7 +416,7 @@ export default function RegistrationForm() {
                         <div className="grid sm:grid-cols-2 gap-5">
                             {/* Profession */}
                             <div>
-                                <label className="block text-sm font-body text-gray-400 mb-1.5">Profession *</label>
+                                <label className="block text-sm font-body text-gray-400 mb-1.5">Profession (optional)</label>
                                 <select {...register('profession')} className={selectClass('profession')}>
                                     <option value="">Select profession</option>
                                     {professions.map(p => (
@@ -405,7 +432,7 @@ export default function RegistrationForm() {
 
                             {/* AI Experience */}
                             <div>
-                                <label className="block text-sm font-body text-gray-400 mb-1.5">AI Experience *</label>
+                                <label className="block text-sm font-body text-gray-400 mb-1.5">AI Experience (optional)</label>
                                 <select {...register('ai_experience')} className={selectClass('ai_experience')}>
                                     <option value="">Select experience</option>
                                     {experiences.map(e => (
@@ -471,7 +498,7 @@ export default function RegistrationForm() {
                             </div>
 
                             <div className="text-left mt-2 px-2 pb-2">
-                                <label className="block text-sm font-body text-gray-300 mb-1.5">MoMo Number or Transaction ID *</label>
+                                <label className="block text-sm font-body text-gray-300 mb-1.5">MoMo Number or Transaction ID (optional)</label>
                                 <input
                                     {...register('transaction_id')}
                                     placeholder="e.g. 677 123 456 or TXN-12345..."

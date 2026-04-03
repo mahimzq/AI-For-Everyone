@@ -8,8 +8,27 @@ const { registrationRules, handleValidation } = require('../middleware/validateI
 const { sendConfirmationEmail } = require('../utils/mailer')
 const registrationQueue = require('../queue/registrationQueue')
 
+// Helper: check if registration is closed (22:00 UK time)
+function isRegistrationClosed() {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        hour: '2-digit',
+        hour12: false
+    }).formatToParts(new Date())
+    const hour = parseInt(parts.find(p => p.type === 'hour').value)
+    return hour >= 22
+}
+
+// GET /api/registrations/status — Public: check if registration is open
+router.get('/status', (_req, res) => {
+    res.json({ closed: isRegistrationClosed() })
+})
+
 // POST /api/registrations — Public (Queue-First)
 router.post('/', registrationRules, handleValidation, async (req, res) => {
+    if (isRegistrationClosed()) {
+        return res.status(403).json({ message: 'Registration is now closed. Please contact the organizer.' })
+    }
     try {
         // Enqueue to Redis via BullMQ (Survives crashes, auto-retries)
         const job = await registrationQueue.add(req.body, { 
@@ -27,6 +46,49 @@ router.post('/', registrationRules, handleValidation, async (req, res) => {
         })
     } catch (err) {
         console.error('🔴 [Registration] Failed to add to queue:', err.message)
+        res.status(500).json({ message: 'Internal Server Error' })
+    }
+})
+
+// POST /api/registrations/admin — Admin manual registration (bypasses deadline)
+router.post('/admin', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { full_name, email, phone, country_code, profession, ai_experience, transaction_id, referral_source } = req.body
+        if (!full_name || !email || !phone) {
+            return res.status(400).json({ message: 'full_name, email and phone are required.' })
+        }
+        const existing = await Registration.findOne({ where: { email } })
+        if (existing) return res.status(409).json({ message: 'Email already registered.' })
+
+        const crypto = require('crypto')
+        const reg = await Registration.create({
+            full_name,
+            email,
+            phone,
+            country_code: country_code || '+237',
+            profession: profession || 'Other',
+            ai_experience: ai_experience || '',
+            transaction_id: transaction_id || '',
+            referral_source: referral_source || '',
+            status: 'confirmed',
+            qr_token: crypto.randomUUID(),
+            confirmation_sent: false,
+        })
+
+        // Send confirmation email
+        try {
+            await sendConfirmationEmail(reg)
+            await reg.update({ confirmation_sent: true })
+        } catch (emailErr) {
+            console.error('Admin reg: email failed:', emailErr.message)
+        }
+
+        const io = req.app.get('io')
+        if (io) io.to('admins').emit('admin:new_registration', { id: reg.id })
+
+        res.status(201).json({ message: 'Registration created successfully.', registration: reg })
+    } catch (err) {
+        console.error('Admin manual registration error:', err.message)
         res.status(500).json({ message: 'Internal Server Error' })
     }
 })

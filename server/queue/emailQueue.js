@@ -17,10 +17,10 @@ const transporter = nodemailer.createTransport({
 })
 
 emailQueue.process(async (job) => {
-    const { from, to, subject, html, registrationId, type } = job.data
-    
+    const { from, to, subject, html, attachments, registrationId, type } = job.data
+
     // Send email via SMTP
-    await transporter.sendMail({ from, to, subject, html })
+    await transporter.sendMail({ from, to, subject, html, attachments })
     
     // If it's a confirmation email, we can mark it as sent in the DB
     if (type === 'confirmation' && registrationId) {

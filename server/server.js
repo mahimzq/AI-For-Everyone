@@ -48,8 +48,8 @@ app.use(cors({
     origin: process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true,
 }))
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // ── Rate Limiting ──
 const apiLimiter = rateLimit({
@@ -92,6 +92,8 @@ app.use('/api/webauthn', require('./routes/webauthn'))
 app.use('/api/marketing', require('./routes/marketing'))
 app.use('/api/admin', require('./routes/admin'))
 app.use('/api/settings', require('./routes/settings'))
+app.use('/api/gallery', require('./routes/gallery'))
+app.use('/api/onboarding', require('./routes/onboarding'))
 
 // ── Health check ──
 app.get('/api/health', (req, res) => {
@@ -230,6 +232,8 @@ const startServer = async () => {
             require('./models/ChatSession')
             require('./models/resourceAssociations')
             require('./models/SiteSetting')
+            require('./models/MarketingCampaign')
+            require('./models/GalleryPhoto')
             await sequelize.sync()
             console.log('✅ Database models synced')
 

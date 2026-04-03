@@ -12,9 +12,9 @@ const registrationRules = [
     body('full_name').trim().notEmpty().withMessage('Full name is required'),
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('phone').trim().notEmpty().withMessage('Phone number is required'),
-    body('transaction_id').trim().notEmpty().withMessage('Payment transaction ID or MoMo number is required'),
-    body('profession').notEmpty().withMessage('Profession is required'),
-    body('ai_experience').notEmpty().withMessage('AI experience level is required'),
+    body('transaction_id').optional({ checkFalsy: true }).trim(),
+    body('profession').optional({ checkFalsy: true }),
+    body('ai_experience').optional({ checkFalsy: true }),
     body('learning_goals').optional().trim(),
     body('referral_source').optional().trim(),
 ]

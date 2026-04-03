@@ -379,7 +379,7 @@ export default function SettingsPage() {
 
             {/* Security Tab */}
             {activeTab === 'security' && (
-                <form onSubmit={handleChangePassword} className="bg-white/5 rounded-2xl border border-white/5 p-6 space-y-5">
+                <form onSubmit={handleSavePassword} className="bg-white/5 rounded-2xl border border-white/5 p-6 space-y-5">
                     <div className="flex items-center gap-3 pb-4 border-b border-white/5">
                         <Shield size={20} className="text-primary-green" />
                         <h3 className="text-white font-heading font-semibold">Change Password</h3>

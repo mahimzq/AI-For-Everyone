@@ -87,6 +87,21 @@ export default function Dashboard() {
         setActivityFeed(prev => [item, ...prev].slice(0, 25))
     }
 
+    // Global 401 interceptor — catches expired tokens from ANY child component
+    useEffect(() => {
+        const interceptor = axios.interceptors.response.use(
+            res => res,
+            err => {
+                if (err.response?.status === 401) {
+                    localStorage.removeItem('adminToken')
+                    navigate('/admin/login')
+                }
+                return Promise.reject(err)
+            }
+        )
+        return () => axios.interceptors.response.eject(interceptor)
+    }, [navigate])
+
     useEffect(() => {
         const token = localStorage.getItem('adminToken')
         if (!token) {
@@ -97,6 +112,7 @@ export default function Dashboard() {
             headers: { Authorization: `Bearer ${token}` }
         }).then(res => setAdmin(res.data))
             .catch(() => {
+                // 401 is already handled by the interceptor above
                 setAdmin({ username: 'Admin', role: 'admin' })
             })
     }, [navigate])

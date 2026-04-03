@@ -155,13 +155,16 @@ export default function AnalyticsPanel() {
                                 </PieChart>
                             </ResponsiveContainer>
                             <div className="flex-1 space-y-1.5">
-                                {professionData.map((p, i) => (
-                                    <div key={p.name} className="flex items-center gap-2 text-xs font-body">
-                                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                                        <span className="text-gray-400 truncate">{p.name}</span>
-                                        <span className="text-white ml-auto">{p.value}</span>
-                                    </div>
-                                ))}
+                                {[...professionData].sort((a, b) => b.value - a.value).map((p) => {
+                                    const origIdx = professionData.indexOf(p)
+                                    return (
+                                        <div key={p.name} className="flex items-center gap-2 text-xs font-body">
+                                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[origIdx % COLORS.length] }} />
+                                            <span className="text-gray-400 truncate">{p.name}</span>
+                                            <span className="text-white font-semibold ml-auto flex-shrink-0">{p.value}</span>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
                     ) : (

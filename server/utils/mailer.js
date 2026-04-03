@@ -1,8 +1,14 @@
 const nodemailer = require('nodemailer')
+const QRCode = require('qrcode')
 const emailQueue = require('../queue/emailQueue')
 
 const sendConfirmationEmail = async (registration) => {
   const { full_name, email, id } = registration
+
+  const qrBuffer = await QRCode.toBuffer(
+    `https://ai4you.mindsetai.cloud/verify/${registration.qr_token}`,
+    { width: 200, margin: 1 }
+  )
 
   const html = `
     <div style="background-color: #050B14; padding: 40px 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
@@ -24,7 +30,7 @@ const sendConfirmationEmail = async (registration) => {
             <h2 style="color: #FFD700; font-size: 32px; margin: 0; font-style: italic; font-family: 'Georgia', serif; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${full_name}</h2>
             
             <div style="margin-top: 30px; background: white; padding: 15px; display: inline-block; border-radius: 12px;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?data=https://ai4you.mindsetai.cloud/verify/${registration.qr_token}&size=200x200" alt="Ticket QR Code" style="display: block; width: 150px; height: 150px;" />
+                <img src="cid:qrcode@ticket" alt="Ticket QR Code" style="display: block; width: 150px; height: 150px;" />
             </div>
             <p style="color: #8C9BAB; font-size: 12px; margin-top: 15px; margin-bottom: 0;">Present this code at the entrance</p>
           </div>
@@ -80,6 +86,12 @@ const sendConfirmationEmail = async (registration) => {
       to: email,
       subject: '✅ Registration Confirmed — AI For Everybody | 21 March 2026',
       html,
+      attachments: [{
+        filename: 'qrcode.png',
+        content: qrBuffer.toString('base64'),
+        encoding: 'base64',
+        cid: 'qrcode@ticket',
+      }],
     }, {
         attempts: 5,
         backoff: 5000
@@ -91,41 +103,79 @@ const sendConfirmationEmail = async (registration) => {
   }
 }
 
-const sendMarketingEmail = async (email, full_name, subject, htmlBody) => {
-  const html = `
-    <div style="background-color: #050B14; padding: 40px 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-      <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(145deg, #0A1628, #11223A); background-color: #0A1628; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 1px solid #1E3A5F;">
-        
-        <!-- Header -->
-        <div style="background: linear-gradient(90deg, #00C853, #00E676); background-color: #00C853; padding: 20px; text-align: center;">
-          <h2 style="margin: 0; color: #050B14; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; font-weight: 800;">Special Update</h2>
-        </div>
+const sendMarketingEmail = async (email, full_name, subject, htmlBody, imageBase64 = null) => {
+  const imageBlock = imageBase64 ? `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+          <tr><td align="center" style="padding: 0 30px 30px 30px;">
+            <img src="cid:marketing-image@campaign" alt="Campaign Image" style="max-width: 100%; border-radius: 12px; display: block;" />
+          </td></tr>
+        </table>` : ''
 
-        <!-- Body -->
-        <div style="padding: 40px 30px;">
-          <p style="color: #00E676; font-size: 16px; margin-bottom: 20px;">Hi ${full_name},</p>
-          <div style="color: #A0B0C0; font-size: 15px; line-height: 1.6;">
-            ${htmlBody}
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${subject}</title></head>
+<body style="margin:0;padding:0;background-color:#0A0F1A;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#0A0F1A;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:600px;width:100%;background-color:#0D1B2E;border-radius:16px;overflow:hidden;border:1px solid #1A3050;">
+
+        <!-- Logo Bar -->
+        <tr><td style="background-color:#0A1628;padding:20px 32px;border-bottom:1px solid #1A3050;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+            <tr>
+              <td valign="middle"><img src="${process.env.CLIENT_URL || 'https://ai4you.mindsetai.cloud'}/images/logo.png" alt="Mindset AI" style="height:40px;width:auto;display:block;" /></td>
+              <td align="right" valign="middle"><span style="color:#4A6080;font-size:11px;text-transform:uppercase;letter-spacing:2px;">Official Update</span></td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Green Accent Bar -->
+        <tr><td style="background:linear-gradient(90deg,#00C853,#00E676);background-color:#00C853;height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+        <!-- Greeting -->
+        <tr><td style="padding:36px 32px 0 32px;">
+          <p style="margin:0 0 8px 0;color:#8CA8C0;font-size:13px;text-transform:uppercase;letter-spacing:2px;">Message for</p>
+          <h2 style="margin:0 0 28px 0;color:#FFFFFF;font-size:26px;font-weight:700;">${full_name}</h2>
+          <hr style="border:none;border-top:1px solid #1A3050;margin:0 0 28px 0;" />
+        </td></tr>
+
+        <!-- Body Content -->
+        <tr><td style="padding:0 32px 32px 32px;">
+          <div style="color:#C0D0E0;font-size:15px;line-height:1.8;">
+            ${htmlBody.replace(/\n/g, '<br>')}
           </div>
-        </div>
+        </td></tr>
+
+        <!-- Image (if any) -->
+        ${imageBlock}
+
+        <!-- Divider -->
+        <tr><td style="padding:0 32px;"><hr style="border:none;border-top:1px solid #1A3050;" /></td></tr>
+
+        <!-- CTA Section -->
+        <tr><td style="padding:28px 32px;" align="center">
+          <a href="https://ai4you.mindsetai.cloud" style="display:inline-block;background-color:#00C853;color:#050B14;font-size:14px;font-weight:700;text-decoration:none;padding:12px 32px;border-radius:8px;letter-spacing:0.5px;">Visit Event Page</a>
+        </td></tr>
 
         <!-- Footer -->
-        <div style="background: #060D17; padding: 25px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05);">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                <tr>
-                    <td align="center">
-                        <p style="color: #4A5B6C; font-size: 11px; margin: 0; line-height: 16px;">
-                            Designed & Developed by 
-                            <img src="${process.env.CLIENT_URL || 'https://ai4you.mindsetai.cloud'}/favicon.png" alt="eWebCity" style="height: 16px; width: auto; display: inline-block; vertical-align: middle; margin: 0 4px; filter: grayscale(100%) brightness(200%);" /> 
-                            eWebCity
-                        </p>
-                    </td>
-                </tr>
-            </table>
-        </div>
-      </div>
-    </div>
-  `
+        <tr><td style="background-color:#070E1A;padding:16px 32px;border-top:1px solid #1A3050;">
+          <p style="margin:0;color:#2A3A4A;font-size:10px;text-align:center;">
+            Designed &amp; Developed by <a href="https://www.facebook.com/eWebcity" target="_blank" style="color:#4A6080;text-decoration:none;">eWebCity</a> &bull; You received this because you registered for our event.
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  const attachments = imageBase64 ? [{
+    filename: 'image.png',
+    content: imageBase64,
+    encoding: 'base64',
+    cid: 'marketing-image@campaign',
+  }] : undefined
 
   try {
     await emailQueue.add({
@@ -134,6 +184,7 @@ const sendMarketingEmail = async (email, full_name, subject, htmlBody) => {
       to: email,
       subject,
       html,
+      attachments,
     }, {
         attempts: 5,
         backoff: 5000

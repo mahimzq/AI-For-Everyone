@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Download, Trash2, CheckCircle2, XCircle, ChevronLeft, ChevronRight, X, Loader2, AlertCircle, Mail } from 'lucide-react'
+import { Search, Download, Trash2, CheckCircle2, XCircle, ChevronLeft, ChevronRight, X, Loader2, AlertCircle, Mail, UserPlus } from 'lucide-react'
 import axios from 'axios'
 import { io } from 'socket.io-client'
 import { useAlert } from './AlertDialog'
@@ -18,6 +18,9 @@ export default function RegistrationsTable() {
     const [selectedRegistration, setSelectedRegistration] = useState(null)
     const [actionLoading, setActionLoading] = useState(null)
     const [error, setError] = useState('')
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [addForm, setAddForm] = useState({ full_name: '', email: '', phone: '', country_code: '+237', profession: '', ai_experience: '', transaction_id: '' })
+    const [addLoading, setAddLoading] = useState(false)
     const perPage = 10
     const dialog = useAlert()
 
@@ -112,6 +115,26 @@ export default function RegistrationsTable() {
             dialog.error(err.response?.data?.message || 'Failed to resend email')
         } finally {
             setActionLoading(null)
+        }
+    }
+
+    const handleAddRegistration = async (e) => {
+        e.preventDefault()
+        if (!addForm.full_name || !addForm.email || !addForm.phone) {
+            dialog.error('Full name, email and phone are required.')
+            return
+        }
+        setAddLoading(true)
+        try {
+            await axios.post('/api/registrations/admin', addForm, { headers })
+            setShowAddModal(false)
+            setAddForm({ full_name: '', email: '', phone: '', country_code: '+237', profession: '', ai_experience: '', transaction_id: '' })
+            fetchRegistrations()
+            dialog.toast.success('Registration added and confirmation email sent')
+        } catch (err) {
+            dialog.error(err.response?.data?.message || 'Failed to add registration')
+        } finally {
+            setAddLoading(false)
         }
     }
 
@@ -244,9 +267,14 @@ export default function RegistrationsTable() {
                     <h1 className="font-heading font-bold text-2xl text-white">Registrations</h1>
                     <p className="text-gray-400 font-body text-sm">{total} total registrations</p>
                 </div>
-                <button onClick={handleExportCSV} className="btn-secondary !py-2 !px-4 !text-sm flex items-center gap-2">
-                    <Download size={16} /> Export CSV
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => setShowAddModal(true)} className="btn-primary !py-2 !px-4 !text-sm flex items-center gap-2">
+                        <UserPlus size={16} /> Add Registration
+                    </button>
+                    <button onClick={handleExportCSV} className="btn-secondary !py-2 !px-4 !text-sm flex items-center gap-2">
+                        <Download size={16} /> Export CSV
+                    </button>
+                </div>
             </div>
 
             {/* Filters */}
@@ -368,6 +396,70 @@ export default function RegistrationsTable() {
             </div>
 
             <DetailModal />
+
+            {/* Add Registration Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)}>
+                    <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/5">
+                            <h2 className="text-xl font-heading font-bold text-white">Add Manual Registration</h2>
+                            <button onClick={() => setShowAddModal(false)} className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleAddRegistration} className="p-6 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                    <label className="block text-sm text-gray-400 mb-1">Full Name *</label>
+                                    <input value={addForm.full_name} onChange={e => setAddForm(f => ({ ...f, full_name: e.target.value }))}
+                                        placeholder="Full name" className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-green" />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm text-gray-400 mb-1">Email *</label>
+                                    <input type="email" value={addForm.email} onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
+                                        placeholder="email@example.com" className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-green" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Country Code</label>
+                                    <select value={addForm.country_code} onChange={e => setAddForm(f => ({ ...f, country_code: e.target.value }))}
+                                        className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-green appearance-none">
+                                        {['+237','+234','+233','+254','+44','+1','+33','+49'].map(c => (
+                                            <option key={c} value={c} className="bg-primary-dark">{c}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Phone *</label>
+                                    <input value={addForm.phone} onChange={e => setAddForm(f => ({ ...f, phone: e.target.value }))}
+                                        placeholder="6XXXXXXXX" className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-green" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Profession</label>
+                                    <select value={addForm.profession} onChange={e => setAddForm(f => ({ ...f, profession: e.target.value }))}
+                                        className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-green appearance-none">
+                                        <option value="" className="bg-primary-dark">Select...</option>
+                                        {['Student','Graduate','Job Seeker','Public Sector Worker','Private Sector Worker','Entrepreneur','Educator/Lecturer','Faith Leader','Other'].map(p => (
+                                            <option key={p} value={p} className="bg-primary-dark">{p}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Payment ID</label>
+                                    <input value={addForm.transaction_id} onChange={e => setAddForm(f => ({ ...f, transaction_id: e.target.value }))}
+                                        placeholder="MoMo / Transaction ID" className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-green" />
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500">Registration will be <span className="text-primary-green font-medium">confirmed immediately</span> and a ticket email will be sent.</p>
+                            <div className="flex items-center gap-3 pt-2">
+                                <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-2 rounded-xl border border-white/10 text-gray-400 text-sm hover:bg-white/5 transition">Cancel</button>
+                                <button type="submit" disabled={addLoading} className="flex-1 py-2 rounded-xl bg-primary-green text-black font-bold text-sm hover:bg-green-400 transition disabled:opacity-50 flex items-center justify-center gap-2">
+                                    {addLoading ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />} Register
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

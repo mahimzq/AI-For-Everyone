@@ -8,14 +8,14 @@ const Registration = sequelize.define('Registration', {
     email: { type: DataTypes.STRING(255), allowNull: false, unique: true },
     phone: { type: DataTypes.STRING(50), allowNull: false },
     country_code: { type: DataTypes.STRING(10), defaultValue: '+237' },
-    transaction_id: { type: DataTypes.STRING(100), allowNull: false },
+    transaction_id: { type: DataTypes.STRING(100), allowNull: true },
     profession: {
         type: DataTypes.ENUM('Student', 'Graduate', 'Job Seeker', 'Public Sector Worker', 'Private Sector Worker', 'Entrepreneur', 'Educator/Lecturer', 'Faith Leader', 'Other'),
-        allowNull: false,
+        allowNull: true,
     },
     ai_experience: {
         type: DataTypes.ENUM('Complete Beginner', 'Heard of AI but never used it', 'Used ChatGPT/Claude a few times', 'Regular AI user'),
-        allowNull: false,
+        allowNull: true,
     },
     learning_goals: { type: DataTypes.TEXT },
     referral_source: {
