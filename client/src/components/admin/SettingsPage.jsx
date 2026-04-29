@@ -159,7 +159,7 @@ export default function SettingsPage() {
         setError('')
         setSuccess('')
         try {
-            await axios.put('/api/auth/me/password', {
+            await axios.patch('/api/auth/password', {
                 currentPassword: passwordForm.currentPassword,
                 newPassword: passwordForm.newPassword,
             }, { headers })
